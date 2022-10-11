@@ -1,0 +1,210 @@
+---
+title: "Untitled"
+author: "swechchha"
+date: "5/4/2022"
+output: html_document
+---
+
+
+
+```{r pressure, echo=FALSE}
+library(readr)
+#read file
+dataframe <- read_csv("C:\\Users\\swechchha\\Desktop\\startup_funding (2).csv")
+View(dataframe)
+
+#library
+library(tidyr)
+library(caret)
+library(dplyr)
+library(data.table)
+library(ggplot2)
+library(repr)
+library(party)
+library(broom)
+library(ggpubr)
+library(plotrix)
+library(caTools)
+library(rpart)
+library(forcats)
+library(stringr)
+library(purrr)
+library(tidyr)
+library(tibble)
+library(RColorBrewer)
+library(rpart.plot)
+
+#summarize data
+summary(dataframe)
+str(dataframe)
+#na value
+sum(is.na(dataframe))
+#clear na value
+clean_dataframe=drop_na(dataframe)
+View(clean_dataframe)
+#count na value
+sum(is.na(clean_dataframe))
+#delete remark col
+newdf=subset(clean_dataframe, select = -c(Remarks) )
+#change datatype char to numeric
+newdf$`Amount in USD`<-as.numeric(gsub(",","",newdf$`Amount in USD`))
+newdf[is.na(newdf)] = 0
+View(newdf)
+#change col name
+colSums(newdf==0)
+colnames(newdf)[9]<-"Amount"
+colnames(newdf)[7]<-"InvesterName"
+colnames(newdf)[6]<-"City"
+colnames(newdf)[2]<-"Date"
+colnames(newdf)[1]<-"SrNo"
+colnames(newdf)[4]<-"IndustryType"
+colnames(newdf)[3]<-"StartupName"
+#change variable name
+newdf[newdf=="Olacabs"]<-"Ola"
+newdf[newdf=="Ola Cabs"]<-"Ola"
+newdf[newdf=="Rapido Bike Taxi"]<-"Rapido"
+newdf[newdf=="Paytm Marketplace"]<-"paytm"
+newdf[newdf=="Bengaluru"]<-"Bangalore"
+newdf[newdf=="Bengalore"]<-"Bangalore"
+newdf[newdf=="New Delhi"]<-"Delhi"
+newdf[newdf=="\\\\xc2\\\\xa0Noida"]<-"Noida"
+newdf[newdf=="\\\\xc2\\\\xa0Mumbai"]<-"Mumbai"
+newdf[newdf=="\\\\xc2\\\\xa0Gurgaon"]<-"Gurgaon"
+newdf[newdf=="\\\\xc2\\\\xa0New Delhi"]<-"Delhi"
+newdf[newdf=="Seattle / Bangalore"]<-"Bangalore"
+newdf[newdf=="Chennai/ Singapore "]<-"Chennai"
+newdf[newdf=="Pune / Singapore"]<-"Chennai"
+View(newdf)
+#plot clean data
+plot(newdf)
+newdf=newdf[order(-newdf$Amount),]
+View(newdf)
+min(newdf$Amount)
+max(newdf$Amount)
+range(newdf$Amount)
+mean(newdf$Amount)
+
+
+#create a new variable and count start name how many time get funding
+startupfund=setDT(newdf)[,.N,by="StartupName"]
+startupfund<-startupfund[order(-startupfund$N),]
+colnames(startupfund)[2]<-"Number"
+View(startupfund)
+print(startupfund)
+
+#creat a new variable $ count city
+city=setDT(newdf)[,.N,by="City"]
+city<-city[order(-city$N),]
+print(city)
+View(city)
+#plot barplot
+ggplot()
+ggplot(data=newdf)
+ggplot(data=newdf,aes(y=City)) + geom_bar(color="black", fill="lightblue",linetype="dashed")+ theme(text = element_text(size = 5),element_line(size =2))
+#create new variable & count industry type
+Industry=setDT(newdf)[,.N,by="IndustryType"]
+print(Industry)
+Industry<-Industry[order(-Industry$N),]
+View(Industry)
+IndustryName=Industry[1:20,]
+colnames(IndustryName)[2]<-"Number"
+print(IndustryName)
+#plot barplot
+ggplot(IndustryName, aes(Number,IndustryType)) +
+  geom_bar(stat="identity", position = "dodge") +
+  labs(title="IndustryType Bar plots")
+#count investmeny type
+Investment=setDT(newdf)[,.N,by="InvestmentnType"]
+Investment<-Investment[order(-Investment$N),]
+colnames(Investment)[2]<-"Number"
+print(Investment)
+#plot barplot
+ggplot(Investment, aes(Number,InvestmentnType)) +
+  geom_bar(stat="identity", position = "dodge") +
+  labs(title="InvestmentType Bar plots")
+newdf%>%filter(City =="Bangalore")->banglore
+print(banglore)
+newdf%>%filter(City =="Delhi")->Delhi
+print(Delhi)
+newdf%>%filter(City =="Mumbai")->mumbai
+print(mumbai)
+newdf%>%filter(City =="Hyderabad")->hyderabad
+print(hyderabad)
+newdf%>%filter(City=="Bangalore" & IndustryType=="Education")->edtechbang
+print(edtechbang)
+newdf%>%filter(City=="Delhi" & IndustryType=="Education")->edtechdelhi
+print(edtechdelhi)
+#plot histogram of amount
+ggplot(data=newdf,aes(x=Amount))
+ggplot(data=newdf,aes(x=Amount))+geom_histogram(color="skyblue",fill="pink",linetype="dashed")
+#plot geom point
+ggplot(data=newdf,aes(x=IndustryType,y=InvestmentnType))+  geom_point()+theme(text = element_text(size = 5),element_line(size =1))
+InvestersName=setDT(newdf)[,.N,by="InvesterName"]
+InvestersName<-InvestersName[order(-InvestersName$N),]
+View(InvestersName)
+print(InvestersName)
+Investers=InvestersName[1:20,]
+colnames(Investers)[2]<-"Number"
+print(Investers)
+boxplot(Investers$Number)
+ggplot(Investers, aes(Number,InvesterName)) +
+  geom_bar(stat="identity", position = "dodge") +
+  labs(title="Investers Bar plots")
+
+ggplot(newdf, aes(Date,City )) +geom_point(colour="pink")+theme(text = element_text(size = 5),element_line(size =1))
+require("RColorBrewer")
+ggplot(newdf, aes(x = "", y =City ,fill=City)) +
+  geom_col(width = 1) + 
+  coord_polar(theta = "y") +
+  xlab(NULL)
+library(wordcloud)
+library(RColorBrewer)
+library(wordcloud2)
+library(tm)
+
+
+
+pie3D(xtabs(~newdf$InvestmentnType),explode=0.2,col=c("red","purple","pink","skyblue","green","lightpink","yellow","orange"))
+library(superml)
+
+lm<-lm(Amount~IndustryType+InvestmentnType,data = newdf)
+summary(lm)
+lm$coefficients
+require(coefplot)
+coefplot(lm)
+ggplot(newdf, aes(x=Date, y=Amount)) + geom_line(aes(group = 1))+
+  theme(axis.text.x=element_text(color=c("black","transparent","transparent","transparent","black","transparent","transparent","transparent","transparent","transparent","black")))
+
+
+ggplot(newdf, aes(x =City, y =Amount)) +
+     coord_flip() +
+     scale_fill_viridis_d()+geom_jitter(position=position_jitter(0.1),cex=0.5) 
+ggqqplot(newdf, x = "Amount",
+         ggtheme = theme_bw())
+
+boxplot(newdf$Amount, col="orange",
+        main="BoxplotAmount")
+
+#prediction
+library(caTools)
+sample.split(newdf$Tier,SplitRatio = 0.65)->split_value
+subset(newdf,split_value==T)->train1
+subset(newdf,split_value==F)->test1
+library(rpart)
+dim(train1)
+dim(test1)
+fit<-rpart(Tier~.,data=train1,method='class')
+plot(fit)
+plot(fit,length(4))
+library(rpart.plot)
+rpart.plot(fit)
+fit<-rpart(Tier~.,data=train1,method='class',parms = list(split='information'))
+predicted=predict(fit,train1,'class')
+predicted
+matrix=table(train1$Tier,predicted)
+matrix
+accuracy=sum(diag(matrix))/sum(matrix)
+accuracy
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
